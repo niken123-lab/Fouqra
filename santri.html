@@ -45,7 +45,7 @@
                      class="santri-card p-6 rounded-[2.5rem] flex flex-col items-center text-center space-y-4">
                     
                     <div class="relative">
-    <img :src="`assets/${santri.nama.toLowerCase().replace(/\s+/g, '')}.jpeg`" 
+    <img :src="`assets/${santri.nama.toLowerCase().replace(/\s+/g, '')}.jpeg`"  
          @error="$el.src='https://ui-avatars.com/api/?name=' + santri.nama + '&background=013C58&color=fff'"
          class="w-24 h-24 rounded-[2rem] object-cover border-4 border-gray-50 shadow-sm">
     
