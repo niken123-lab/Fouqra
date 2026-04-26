@@ -26,12 +26,21 @@ FOUQRA adalah aplikasi web sederhana untuk mengelola data santri seperti nama, p
 ## 📁 Struktur Project
 
 ```
-/project
- ├── index.html
- ├── admin.html
- ├── firebase.js
- ├── script.js
- └── assets/
+FOUQRA/
+├── assets/
+├── hijaiyah/
+├── Huruf Hijaiyah Dan Taj...
+├── dashboard.html
+├── firebase.config.js
+├── firebase.js
+├── game-box.html
+├── game-flash.html
+├── game-map.html
+├── game.html
+├── index.html
+├── materi.html
+├── presensi.html
+└── santri.html
 ```
 
 ---
