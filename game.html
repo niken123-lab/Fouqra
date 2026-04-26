@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOUQRA - Arena Bermain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        .game-card { 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        .game-card:hover { 
+            transform: translateY(-12px); 
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 30px 60px -12px rgba(1, 60, 88, 0.15);
+        }
+        .icon-bounce { transition: transform 0.5s ease; }
+        .game-card:hover .icon-bounce { transform: scale(1.1) rotate(5deg); }
+        body { 
+            background: radial-gradient(circle at top right, #A8E8F9, #F8FAFC, #F8FAFC);
+            min-height: 100 screen;
+        }
+        .badge-new {
+            background: linear-gradient(45deg, #F5A201, #FFD372);
+        }
+    </style>
+</head>
+<body class="text-[#013C58] selection:bg-[#A8E8F9]">
+
+    <nav class="p-6 flex justify-between items-center max-w-7xl mx-auto">
+        <a href="dashboard.html" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-sm hover:shadow-md transition-all group">
+            <i class="fa-solid fa-house text-gray-400 group-hover:text-[#013C58]"></i>
+        </a>
+        <div class="flex items-center gap-3">
+            <div class="text-right hidden md:block">
+                <p class="text-[8px] font-black uppercase text-gray-400 tracking-widest leading-none">Pilih Mode</p>
+                <p class="text-[10px] font-bold text-[#254E06] uppercase">3 Game Tersedia</p>
+            </div>
+            <div class="bg-[#013C58] w-10 h-10 rounded-xl flex items-center justify-center text-[#EAC800] shadow-lg">
+                <i class="fa-solid fa-dice text-lg"></i>
+            </div>
+        </div>
+    </nav>
+
+    <header class="max-w-7xl mx-auto px-6 pt-6 pb-12 text-center">
+        <div class="inline-block bg-[#013C58]/5 px-4 py-1.5 rounded-full mb-4">
+            <p class="text-[9px] font-black uppercase tracking-[0.3em] text-[#013C58]">Murojaah Time!</p>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-black tracking-tighter uppercase leading-none">
+            Arena <br><span class="text-[#F5A201]">Bermain</span>
+        </h1>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 pb-32">
+        
+        <a href="game-box.html" class="game-card p-10 rounded-[3.5rem] border border-white shadow-sm flex flex-col items-center text-center relative overflow-hidden">
+            <div class="absolute top-6 right-6 badge-new text-[#013C58] text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Hot</div>
+            <div class="icon-bounce w-24 h-24 bg-[#F5A201]/20 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner">
+                <i class="fa-solid fa-box-open text-4xl text-[#F5A201]"></i>
+            </div>
+            <h2 class="text-2xl font-black uppercase tracking-tighter">Kotak Misteri</h2>
+            <p class="text-xs font-medium text-gray-500 mt-3 leading-relaxed">Gacha tantangan seru! Pilih kotakmu dan temukan hadiah atau tugas hafalan.</p>
+            <div class="mt-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-[#013C58] text-[#EAC800] px-6 py-3 rounded-2xl">
+                Buka Kotak <i class="fa-solid fa-arrow-right ml-1"></i>
+            </div>
+        </a>
+
+        <a href="game-flash.html" class="game-card p-10 rounded-[3.5rem] border border-white shadow-sm flex flex-col items-center text-center">
+            <div class="icon-bounce w-24 h-24 bg-[#254E06]/10 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner">
+                <i class="fa-solid fa-bolt-lightning text-4xl text-[#254E06]"></i>
+            </div>
+            <h2 class="text-2xl font-black uppercase tracking-tighter">Cepat Tepat</h2>
+            <p class="text-xs font-medium text-gray-500 mt-3 leading-relaxed">Uji refleks! Tebak nama surat dari potongan ayat sebelum waktu habis.</p>
+            <div class="mt-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-[#013C58] text-[#EAC800] px-6 py-3 rounded-2xl">
+                Mulai Kuis <i class="fa-solid fa-arrow-right ml-1"></i>
+            </div>
+        </a>
+
+        <a href="game-map.html" class="game-card p-10 rounded-[3.5rem] border border-white shadow-sm flex flex-col items-center text-center">
+            <div class="icon-bounce w-24 h-24 bg-[#A8E8F9] rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner">
+                <i class="fa-solid fa-map-location-dot text-4xl text-[#013C58]"></i>
+            </div>
+            <h2 class="text-2xl font-black uppercase tracking-tighter">Ular Tangga</h2>
+            <p class="text-xs font-medium text-gray-500 mt-3 leading-relaxed">Lalui rintangan hafalan. Siapa santri pertama yang sampai ke garis finish?</p>
+            <div class="mt-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-[#013C58] text-[#EAC800] px-6 py-3 rounded-2xl">
+                Lihat Papan <i class="fa-solid fa-arrow-right ml-1"></i>
+            </div>
+        </a>
+
+    </main>
+
+    <div class="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-sm px-6">
+        <div class="bg-white/80 backdrop-blur-xl rounded-full p-4 border border-white shadow-2xl flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[#A8E8F9] rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-users text-[10px]"></i>
+                </div>
+                <span class="text-[9px] font-black uppercase tracking-widest">8 Santri Online</span>
+            </div>
+            <div class="h-6 w-px bg-gray-100"></div>
+            <p class="text-[9px] font-black text-[#F5A201] uppercase tracking-widest">Mode: Fun Learning</p>
+        </div>
+    </div>
+
+    <footer class="bg-[#013C58] text-white mt-16 md:mt-24 px-6 md:px-10 py-12 md:py-16 rounded-t-[2.5rem] md:rounded-t-[3.5rem]">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
+        <div class="space-y-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[#EAC800] rounded-lg text-[#013C58] flex items-center justify-center font-bold italic">4</div>
+                <h4 class="font-black text-2xl tracking-tighter uppercase">Fouqra</h4>
+            </div>
+            <p class="text-sm opacity-50 leading-relaxed font-medium">Dashboard akademik santri untuk memantau perkembangan mengaji dan administrasi secara mandiri.</p>
+        </div>
+        
+        <div class="space-y-6">
+            <h4 class="font-black text-[10px] uppercase tracking-[0.3em] text-[#F5A201]">Navigasi Cepat</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm font-bold opacity-60">
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Materi</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Nilai</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Jadwal</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Profil</a>
+            </div>
+        </div>
+
+        <div class="space-y-6 md:text-right">
+            <h4 class="font-black text-[10px] uppercase tracking-[0.3em] text-[#F5A201]">Status Sistem</h4>
+            <div class="flex items-center md:justify-end gap-2 text-xs font-bold text-green-400">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                Sistem Berjalan Normal
+            </div>
+            <p class="text-[10px] font-black opacity-30 mt-8 uppercase">© 2026 Fouqra Digital Solution</p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

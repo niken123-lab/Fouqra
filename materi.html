@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOUQRA - Materi Iqra 4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .materi-card { transition: all 0.3s ease; border: 1px solid rgba(168, 232, 249, 0.3); }
+        .materi-card:hover { transform: translateY(-8px); border-color: #F5A201; }
+        .huruf-btn { transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
+        .huruf-btn:active { transform: scale(0.9); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #013C58; border-radius: 10px; }
+        .grid-detail { display: grid; gap: 1.5rem; }
+    </style>
+</head>
+<body class="bg-gray-50 text-[#013C58]" x-data="{ 
+    selectedMateri: null,
+    playAudio(namaFile) {
+        if(!namaFile) return;
+        let audio = new Audio(`hijaiyah/${namaFile}.mp3`);
+        audio.play().catch(e => {
+            console.error('File audio tidak ditemukan:', `hijaiyah/${namaFile}.mp3`);
+        });
+    },
+    materis: [
+        { 
+            id: 1, 
+            judul: 'Panjang Pendek / Mad', 
+            icon: 'fa-ruler-horizontal', 
+            warna: 'bg-[#A8E8F9]/20', 
+            detail: 'Mad Thabi\'i terjadi apabila ada huruf Alif, Wawu mati, atau Ya mati setelah harakat yang sesuai.',
+            tips: 'Jangan terlalu panjang, cukup seperti ayunan dua ketukan.',
+            madList: [
+                { judul: 'Mad Alif', rumus: 'Fathah + Alif', contoh: 'بَا', audio: 'mad_alif' },
+                { judul: 'Mad Ya', rumus: 'Kasrah + Ya Sukun', contoh: 'بِيْ', audio: 'mad_ya' },
+                { judul: 'Mad Wawu', rumus: 'Dhammah + Wawu Sukun', contoh: 'بُوْ', audio: 'mad_wawu' }
+            ]
+        },
+        { 
+            id: 2, 
+            judul: 'Huruf Hijaiyah', 
+            icon: 'fa-language', 
+            warna: 'bg-[#F5A201]/10', 
+            detail: 'Latih pelafalan makhraj setiap huruf secara konsisten!',
+            hurufList: [
+                { n: 'alif', a: 'ا' }, { n: 'ba', a: 'ب' }, { n: 'ta', a: 'ت' }, { n: 'tsa', a: 'ث' },
+                { n: 'jim', a: 'ج' }, { n: 'ha', a: 'ح' }, { n: 'kho', a: 'خ' }, { n: 'dal', a: 'د' },
+                { n: 'dza', a: 'ذ' }, { n: 'ro', a: 'ر' }, { n: 'zay', a: 'ز' }, { n: 'sin', a: 'س' },
+                { n: 'syin', a: 'ش' }, { n: 'shod', a: 'ص' }, { n: 'dhod', a: 'ض' }, { n: 'tho', a: 'ط' },
+                { n: 'dhzo', a: 'ظ' }, { n: 'ain', a: 'ع' }, { n: 'ghoin', a: 'غ' }, { n: 'fa', a: 'ف' },
+                { n: 'qof', a: 'ق' }, { n: 'kaf', a: 'ك' }, { n: 'lam', a: 'ل' }, { n: 'mim', a: 'م' },
+                { n: 'nun', a: 'ن' }, { n: 'waw', a: 'و' }, { n: 'Ha (besar)', a: 'ه' }, { n: 'lamalif', a: 'لا' }, 
+                { n: 'hamzah', a: 'ء' }, { n: 'ya', a: 'ي' }
+            ]
+        },
+        { 
+            id: 3, 
+            judul: 'Makhrajul Huruf', 
+            icon: 'fa-microphone-lines', 
+            warna: 'bg-[#254E06]/10', 
+            detail: 'Fokus pada huruf-huruf yang bunyinya hampir sama, terutama saat disukunkan.',
+            tips: 'Tekan sedikit pada huruf \'Ain (ع), tapi jangan sampai tertahan seperti Hamzah (ء).',
+            miripList: [
+                { kategori: 'Tenggorokan', items: [{ arab: 'أَ - أْ', latin: 'Hamzah', audio: 'sukun_hamzah' }, { arab: 'عَ -  عْ', latin: 'Ain', audio: 'sukun_ain' }] },
+                { kategori: 'Lidah Dalam', items: [{ arab: 'قَ - قْ', latin: 'Qof', audio: 'sukun_qof' }, { arab: 'كَ - كْ', latin: 'Kaf', audio: 'sukun_kaf' }] },
+                { kategori: 'Pedas vs Dada', items: [{ arab: 'حَ - حْ', latin: 'Ha Pedas', audio: 'sukun_ha' }, { arab: 'هَ - هْ', latin: 'Ha Dada', audio: 'sukun_ha_besar' }] }
+            ]
+        },
+        { 
+            id: 4, 
+            judul: 'Qolqolah (Mantul)', 
+            icon: 'fa-bullseye', 
+            warna: 'bg-red-500/10', 
+            detail: 'Huruf Qolqolah harus dibaca memantul jika berharakat sukun (mati) atau waqaf.',
+            tips: 'Ingat singkatannya: BA-JU-DI-TO-QO!',
+            qolList: [
+                { a: 'بْ', n: 'Ba', ex: 'اَبْ' }, { a: 'جْ', n: 'Jim', ex: 'اَجْ' }, { a: 'دْ', n: 'Dal', ex: 'اَدْ' },
+                { a: 'طْ', n: 'Tho', ex: 'اَطْ' }, { a: 'قْ', n: 'Qof', ex: 'اَقْ' }
+            ]
+        }
+    ]
+}">
+
+    <nav class="bg-white border-b border-gray-100 sticky top-0 z-40 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <a href="dashboard.html" class="text-gray-400 hover:text-[#013C58] transition-colors"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+                <h1 class="text-xl font-black tracking-tighter uppercase">Pusat <span class="text-[#F5A201]">Materi</span></h1>
+            </div>
+            <span class="bg-[#013C58] text-[#EAC800] px-4 py-1.5 rounded-full text-[10px] font-black uppercase italic">Iqra Level 4</span>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-10">
+        <div class="bg-[#013C58] rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
+            <div class="relative z-10 max-w-xl space-y-4">
+                <h2 class="text-3xl md:text-4xl font-black leading-tight tracking-tighter uppercase italic">Asah Tajwidmu!</h2>
+                <p class="text-sm opacity-60 leading-relaxed font-medium">Klik kartu materi untuk mulai eksplorasi cara baca yang benar.</p>
+            </div>
+            <i class="fa-solid fa-mosque absolute -right-10 -bottom-10 text-[15rem] opacity-5 rotate-12"></i>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <template x-for="m in materis" :key="m.id">
+                <div @click="selectedMateri = m; $nextTick(() => $el.parentElement.nextElementSibling.scrollIntoView({behavior: 'smooth'}))" 
+                     class="materi-card bg-white p-8 rounded-[2.5rem] cursor-pointer group shadow-sm">
+                    <div :class="m.warna" class="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
+                        <i :class="'fa-solid ' + m.icon" class="text-2xl text-[#013C58]"></i>
+                    </div>
+                    <h3 class="text-xl font-black uppercase tracking-tighter mb-2" x-text="m.judul"></h3>
+                    <p class="text-[10px] font-black text-[#F5A201] uppercase tracking-widest">Buka Materi <i class="fa-solid fa-chevron-right ml-1"></i></p>
+                </div>
+            </template>
+        </div>
+
+        <div x-show="selectedMateri" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-y-8"
+             class="bg-white border-2 border-[#A8E8F9] rounded-[2.5rem] p-8 md:p-10 shadow-xl">
+            
+            <div class="flex flex-col gap-8">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-10 bg-[#F5A201] rounded-full"></span>
+                        <h4 class="text-3xl font-black uppercase tracking-tighter" x-text="selectedMateri?.judul"></h4>
+                    </div>
+                    <button @click="selectedMateri = null" class="bg-gray-100 text-gray-400 p-3 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <template x-if="selectedMateri?.id === 1">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <template x-for="item in selectedMateri.madList" :key="item.judul">
+                            <div class="p-6 bg-white border-2 border-gray-100 rounded-[2rem] text-center shadow-sm hover:bg-[#013C58] hover:text-white transition-all cursor-pointer group" @click="playAudio(item.audio)">
+                                <h5 class="text-[#F5A201] font-black text-xs uppercase mb-4" x-text="item.judul"></h5>
+                                <div class="text-5xl font-bold mb-4" x-text="item.contoh"></div>
+                                <p class="text-[10px] font-black uppercase opacity-40 group-hover:opacity-100" x-text="item.rumus"></p>
+                                <i class="fa-solid fa-volume-high mt-4 block text-[#F5A201]"></i>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <template x-if="selectedMateri?.id === 2">
+                    <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-3">
+                        <template x-for="h in selectedMateri.hurufList" :key="h.n">
+                            <button @click="playAudio(h.n)" class="huruf-btn aspect-square bg-gray-50 rounded-2xl flex flex-col items-center justify-center border-b-4 border-gray-200 hover:bg-[#F5A201]/10 group">
+                                <span class="text-2xl font-bold text-[#013C58]" x-text="h.a"></span>
+                                <span class="text-[8px] font-black uppercase opacity-30 group-hover:opacity-100" x-text="h.n"></span>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+
+                <template x-if="selectedMateri?.id === 3">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <template x-for="kat in selectedMateri.miripList" :key="kat.kategori">
+                            <div class="bg-white rounded-[2rem] border-2 border-gray-100 p-6 shadow-sm hover:border-[#F5A201] transition-colors">
+                                <h5 class="text-[10px] font-black uppercase text-[#F5A201] mb-6 flex items-center gap-2">
+                                    <i class="fa-solid fa-arrows-left-right"></i> <span x-text="kat.kategori"></span>
+                                </h5>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <template x-for="item in kat.items" :key="item.arab">
+                                        <button @click="playAudio(item.audio)" class="p-4 rounded-2xl bg-gray-50 hover:bg-[#013C58] hover:text-white transition-all text-center group">
+                                            <div class="text-2xl font-bold" x-text="item.arab"></div>
+                                            <div class="text-[9px] font-black opacity-40 group-hover:opacity-100 uppercase" x-text="item.latin"></div>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <template x-if="selectedMateri?.id === 4">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <template x-for="q in selectedMateri.qolList" :key="q.n">
+                            <button @click="playAudio('qol_' + q.n.toLowerCase())" class="p-6 rounded-[2rem] bg-gray-50 hover:bg-red-500 hover:text-white transition-all group text-center border-b-4 border-gray-200 hover:border-red-700">
+                                <div class="text-4xl font-bold mb-2" x-text="q.a"></div>
+                                <div class="text-[10px] font-black uppercase opacity-40 group-hover:opacity-100" x-text="q.n"></div>
+                                <div class="mt-2 text-sm font-black opacity-0 group-hover:opacity-100" x-text="'Contoh: ' + q.ex"></div>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+
+                <div x-show="selectedMateri?.tips" class="bg-[#013C58] p-8 rounded-[2rem] text-white relative overflow-hidden mt-4">
+                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-[#EAC800] mb-3">Tips Belajar</p>
+                    <p class="text-sm font-medium italic opacity-90 relative z-10" x-text="selectedMateri?.tips"></p>
+                    <i class="fa-solid fa-lightbulb absolute -right-4 -bottom-4 text-6xl opacity-10 -rotate-12"></i>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-[#013C58] text-white mt-16 md:mt-24 px-6 md:px-10 py-12 md:py-16 rounded-t-[2.5rem] md:rounded-t-[3.5rem]">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
+        <div class="space-y-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[#EAC800] rounded-lg text-[#013C58] flex items-center justify-center font-bold italic">4</div>
+                <h4 class="font-black text-2xl tracking-tighter uppercase">Fouqra</h4>
+            </div>
+            <p class="text-sm opacity-50 leading-relaxed font-medium">Dashboard akademik santri untuk memantau perkembangan mengaji dan administrasi secara mandiri.</p>
+        </div>
+        
+        <div class="space-y-6">
+            <h4 class="font-black text-[10px] uppercase tracking-[0.3em] text-[#F5A201]">Navigasi Cepat</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm font-bold opacity-60">
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Materi</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Nilai</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Jadwal</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Profil</a>
+            </div>
+        </div>
+
+        <div class="space-y-6 md:text-right">
+            <h4 class="font-black text-[10px] uppercase tracking-[0.3em] text-[#F5A201]">Status Sistem</h4>
+            <div class="flex items-center md:justify-end gap-2 text-xs font-bold text-green-400">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                Sistem Berjalan Normal
+            </div>
+            <p class="text-[10px] font-black opacity-30 mt-8 uppercase">© 2026 Fouqra Digital Solution</p>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

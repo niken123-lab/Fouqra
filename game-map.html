@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOUQRA - Peta Progres</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        .grid-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .cell { aspect-ratio: 1/1; transition: all 0.4s ease; }
+        .pion { transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .finish-cell { background: linear-gradient(135deg, #F5A201, #EAC800); color: white; border: none !important; }
+        ::-webkit-scrollbar { width: 0px; }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-[#013C58]" x-data="mapGame()">
+
+    <nav class="p-6 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100">
+        <a href="game.html" class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+        <div class="text-center">
+            <h1 class="text-[10px] font-black uppercase tracking-[0.3em]">Peta <span class="text-[#F5A201]">Bintang</span></h1>
+        </div>
+        <button @click="resetGame()" class="text-red-400 text-[10px] font-black uppercase tracking-widest">Reset</button>
+    </nav>
+
+    <main class="max-w-2xl mx-auto p-6 pb-40">
+        
+        <div class="grid-board bg-white p-6 rounded-[3rem] shadow-2xl border border-gray-100 mb-10">
+            <template x-for="n in 20" :key="n">
+                <div :class="n === 20 ? 'finish-cell shadow-lg shadow-[#F5A201]/30' : 'bg-gray-50 border border-gray-100'"
+                     class="cell rounded-[1.8rem] flex flex-col items-center justify-center relative shadow-inner overflow-hidden">
+                    
+                    <span class="absolute top-2 left-3 text-[10px] font-black opacity-20" x-text="n"></span>
+                    
+                    <div class="flex flex-wrap justify-center gap-1 p-2">
+                        <template x-for="s in santris" :key="s.id">
+                            <template x-if="s.pos === n">
+                                <div class="relative group">
+                                    <img :src="s.foto" class="pion w-7 h-7 md:w-9 md:h-9 rounded-full border-2 border-white shadow-md object-cover">
+                                    <div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+
+                    <template x-if="n === 20">
+                        <i class="fa-solid fa-crown text-xl mt-1 animate-bounce"></i>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex justify-between items-center px-4">
+                <h2 class="text-[10px] font-black uppercase text-gray-400 tracking-[0.3em]">Kendali Pion Santri</h2>
+                <div class="bg-[#254E06]/10 text-[#254E06] px-3 py-1 rounded-full text-[8px] font-black uppercase">
+                    Auto-Save Active
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <template x-for="(s, index) in santris" :key="s.id">
+                    <div class="bg-white p-5 rounded-[2.5rem] shadow-sm border border-gray-50 flex items-center justify-between group hover:border-[#A8E8F9] hover:shadow-xl transition-all duration-300">
+                        <div class="flex items-center gap-4">
+                            <div class="relative">
+                                <img :src="s.foto" class="w-12 h-12 rounded-2xl object-cover shadow-sm group-hover:scale-110 transition-transform">
+                                <div class="absolute -bottom-1 -right-1 bg-[#F5A201] text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-sm" x-text="s.poin || 0"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-[11px] font-black uppercase tracking-tight" x-text="s.nama"></h3>
+                                <p class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Kotak: <span class="text-[#013C58]" x-text="s.pos"></span></p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button @click="move(index, -1)" class="w-9 h-9 bg-gray-50 rounded-xl text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all flex items-center justify-center">
+                                <i class="fa-solid fa-minus text-[10px]"></i>
+                            </button>
+                            <button @click="move(index, 1)" class="px-5 py-3 bg-[#013C58] text-[#EAC800] rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-md">
+                                Maju <i class="fa-solid fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </main>
+
+    <div x-show="showWin" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#013C58]/95 backdrop-blur-xl">
+        <div class="text-center transform scale-up">
+            <div class="relative inline-block mb-8">
+                <img :src="winner?.foto" class="w-32 h-32 rounded-[3.5rem] border-8 border-[#F5A201] shadow-2xl">
+                <div class="absolute -top-4 -right-4 bg-[#EAC800] w-14 h-14 rounded-full flex items-center justify-center text-[#013C58] shadow-xl border-4 border-white">
+                    <i class="fa-solid fa-crown text-2xl"></i>
+                </div>
+            </div>
+            <h2 class="text-white text-5xl font-black uppercase tracking-tighter mb-2">MUBARAK!</h2>
+            <p class="text-[#A8E8F9] text-lg font-bold uppercase tracking-[0.2em]" x-text="winner?.nama"></p>
+            <div class="mt-8 bg-white/10 px-8 py-4 rounded-[2rem] inline-block border border-white/10">
+                <span class="text-[#F5A201] font-black text-xl tracking-tighter">+10 BINTANG KEMENANGAN</span>
+            </div>
+            <button @click="showWin = false" class="block w-full mt-12 py-5 bg-white text-[#013C58] rounded-[2.5rem] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-gray-100 transition-all">Lanjut Belajar</button>
+        </div>
+    </div>
+
+    <script>
+        function mapGame() {
+            return {
+                santris: [],
+                showWin: false,
+                winner: null,
+
+                init() {
+                    // Ambil data utama dari DB kamu
+                    const localData = localStorage.getItem('fouqra_v3_db');
+                    // Ambil posisi terakhir pion agar tidak reset saat refresh
+                    const savedPos = localStorage.getItem('fouqra_map_pos');
+                    
+                    let baseData = localData ? JSON.parse(localData) : [];
+                    const positions = savedPos ? JSON.parse(savedPos) : {};
+
+                    this.santris = baseData.map(s => ({
+                        ...s,
+                        pos: positions[s.id] || 1, // Default di kotak 1
+                        poin: s.poin || 0
+                    }));
+                },
+
+                move(index, steps) {
+                    let s = this.santris[index];
+                    let newPos = s.pos + steps;
+
+                    if (newPos >= 1 && newPos <= 20) {
+                        s.pos = newPos;
+                        this.saveData();
+                    }
+
+                    // Logika jika sampai finish (kotak 20)
+                    if (newPos === 20) {
+                        this.winner = s;
+                        this.showWin = true;
+                        this.updatePoin(index, 10); // Hadiah finish +10
+                        this.celebrate();
+                    }
+                },
+
+                updatePoin(index, amount) {
+                    this.santris[index].poin += amount;
+                    this.saveData();
+                },
+
+                saveData() {
+                    // 1. Simpan posisi pion
+                    const posData = {};
+                    this.santris.forEach(s => posData[s.id] = s.pos);
+                    localStorage.setItem('fouqra_map_pos', JSON.stringify(posData));
+
+                    // 2. Simpan poin ke database utama agar dashboard terupdate
+                    const mainData = JSON.parse(localStorage.getItem('fouqra_v3_db'));
+                    this.santris.forEach(s => {
+                        const target = mainData.find(m => m.id === s.id);
+                        if(target) target.poin = s.poin;
+                    });
+                    localStorage.setItem('fouqra_v3_db', JSON.stringify(mainData));
+                },
+
+                celebrate() {
+                    confetti({
+                        particleCount: 200,
+                        spread: 80,
+                        origin: { y: 0.6 },
+                        colors: ['#F5A201', '#013C58', '#ffffff']
+                    });
+                },
+
+                resetGame() {
+                    if(confirm('Ulangi langkah semua santri ke kotak 1? (Poin bintang tetap aman)')) {
+                        this.santris.forEach(s => s.pos = 1);
+                        const posData = {};
+                        this.santris.forEach(s => posData[s.id] = 1);
+                        localStorage.setItem('fouqra_map_pos', JSON.stringify(posData));
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

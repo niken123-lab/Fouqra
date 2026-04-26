@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOUQRA - Cepat Tepat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        .answer-btn { transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .answer-btn:active { transform: scale(0.95); }
+        .progress-bar { transition: width 1s linear; }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-[#013C58] min-h-screen" x-data="flashGame()">
+
+    <template x-if="!selectedSantri">
+        <div class="fixed inset-0 z-50 bg-[#013C58] p-6 overflow-y-auto">
+            <div class="max-w-2xl mx-auto">
+                <header class="text-center mb-10 mt-10">
+                    <h2 class="text-white text-4xl font-black uppercase tracking-tighter">Pilih <span class="text-[#F5A201]">Santri</span></h2>
+                    <p class="text-[10px] text-[#A8E8F9] uppercase tracking-[0.4em] mt-2 font-bold italic">Siapa yang paling cepat hari ini?</p>
+                </header>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <template x-for="s in allSantris" :key="s.id">
+                        <button @click="startGame(s)" class="bg-white/5 border border-white/10 p-5 rounded-[3rem] flex flex-col items-center hover:bg-white hover:shadow-2xl transition-all group">
+                            <div class="relative mb-3">
+                                <img :src="s.foto" class="w-16 h-16 rounded-full object-cover border-2 border-white/20 group-hover:border-[#013C58]">
+                                <div class="absolute -bottom-1 -right-1 bg-[#F5A201] text-[8px] font-black px-1.5 py-0.5 rounded-full text-[#013C58]" x-text="s.poin || 0"></div>
+                            </div>
+                            <span class="text-white font-black text-[10px] uppercase group-hover:text-[#013C58] truncate w-full" x-text="s.nama"></span>
+                        </button>
+                    </template>
+                </div>
+                
+                <a href="game" class="block text-center mt-12 text-white/20 text-[9px] font-black uppercase tracking-widest hover:text-white transition-colors">
+                    <i class="fa-solid fa-chevron-left mr-2"></i> Kembali ke Menu
+                </a>
+            </div>
+        </div>
+    </template>
+
+    <template x-if="selectedSantri">
+        <div class="min-h-screen flex flex-col" x-cloak>
+            <nav class="p-6 flex justify-between items-center bg-white border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <img :src="selectedSantri.foto" class="w-10 h-10 rounded-2xl object-cover shadow-md">
+                    <div>
+                        <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Playing Now</p>
+                        <p class="font-black text-xs uppercase" x-text="selectedSantri.nama"></p>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-clock text-[#F5A201] text-xs"></i>
+                        <span class="font-black text-sm" :class="timer < 5 ? 'text-red-500 animate-pulse' : ''" x-text="timer + 's'"></span>
+                    </div>
+                    <div class="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-[#F5A201] progress-bar" :style="`width: ${(timer/15)*100}%`"></div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                <div class="bg-white p-12 rounded-[4rem] shadow-2xl border-b-[12px] border-gray-100 mb-12 w-full max-w-lg relative">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#013C58] text-[#EAC800] px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                        Tebak Nama Surat
+                    </div>
+                    <h2 class="text-3xl font-serif italic text-[#013C58] leading-relaxed mb-4" x-text="currentQuestion.ayat"></h2>
+                    <p class="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em]">"Lanjutkan atau sebutkan suratnya!"</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 w-full max-w-lg">
+                    <template x-for="option in currentQuestion.options">
+                        <button @click="checkAnswer(option)" 
+                                class="answer-btn bg-white p-6 rounded-[2rem] font-black uppercase tracking-widest text-[11px] shadow-sm hover:bg-[#013C58] hover:text-[#EAC800] border border-gray-50">
+                            <span x-text="option"></span>
+                        </button>
+                    </template>
+                </div>
+            </main>
+        </div>
+    </template>
+
+    <div x-show="showResult" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-[#013C58]/95 backdrop-blur-md">
+        <div class="bg-white rounded-[3.5rem] p-10 text-center w-full max-w-sm shadow-2xl scale-up">
+            <div class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6" :class="isCorrect ? 'bg-green-100' : 'bg-red-100'">
+                <i :class="isCorrect ? 'fa-solid fa-check text-green-500' : 'fa-solid fa-xmark text-red-500'" class="text-4xl"></i>
+            </div>
+            
+            <h2 class="text-3xl font-black uppercase tracking-tighter" x-text="isCorrect ? 'Mantap!' : 'Waduh!'"></h2>
+            <p class="text-sm font-medium text-gray-500 mt-2 mb-10" 
+               x-text="isCorrect ? 'Kecepatanmu luar biasa! Kamu dapat tambahan 5 Bintang.' : 'Waktunya murajaah lagi supaya lebih lancar!'"></p>
+            
+            <button @click="finishGame()" class="w-full py-5 bg-[#013C58] text-[#EAC800] rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl">
+                Klaim & Kembali
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function flashGame() {
+            return {
+                allSantris: [],
+                selectedSantri: null,
+                timer: 15,
+                interval: null,
+                showResult: false,
+                isCorrect: false,
+                currentQuestion: {},
+                
+                // Kumpulan Soal (Bisa kamu tambah lagi sesuai materi)
+                questions: [
+                    { ayat: '"Fadzalika-lladzi yadu\'ul yatiim..."', options: ['Al-Maun', 'Al-Kautsar', 'Al-Quraisy'], correct: 'Al-Maun' },
+                    { ayat: '"Wajaa-a robbuka wal malaku shaffan shaffa..."', options: ['Al-Fajr', 'Al-Balad', 'Asy-Syams'], correct: 'Al-Fajr' },
+                    { ayat: '"Innaa a\'tainaakal kautsar..."', options: ['Al-Maun', 'Al-Kautsar', 'Al-Ikhlas'], correct: 'Al-Kautsar' },
+                    { ayat: '"Ilaafi quraisyin ilaafihim..."', options: ['Al-Fil', 'Quraish', 'Al-Ashr'], correct: 'Quraish' },
+                    { ayat: '"Wattini wazzaitun..."', options: ['At-Tin', 'Al-Alaq', 'Al-Qadr'], correct: 'At-Tin' }
+                ],
+
+                init() {
+    // 1. Coba ambil data dari database utama
+    const data = localStorage.getItem('fouqra_v3_db');
+    
+    if (data && JSON.parse(data).length > 0) {
+        // Jika ada isinya, pakai data asli
+        this.allSantris = JSON.parse(data);
+    } else {
+        // Jika kosong (seperti di screenshot), pakai data cadangan ini dulu
+        this.allSantris = [
+            { id: 1, nama: 'Adinda', foto: 'assets/adinda.jpeg', poin: 0 },
+            { id: 2, nama: 'Cinta', foto: 'assets/cinta.jpeg', poin: 0 },
+            { id: 3, nama: 'Kahfi', foto: 'assets/kahfi.jpeg', poin: 0 },
+            { id: 4, nama: 'Salman', foto: 'assets/salman.jpeg', poin: 0 },
+            { id: 5, nama: 'Shafa', foto: 'assets/shafa.jpeg', poin: 0 },
+            { id: 6, nama: 'Yufi', foto: 'assets/yufi.jpeg', poin: 0 },
+            { id: 7, nama: 'Zaky', foto: 'assets/zaky.jpeg', poin: 0 },
+            { id: 8, nama: 'Maulidia', foto: 'assets/maulidia.jpeg', poin: 0 }
+        ];
+        // Opsional: Simpan ke localStorage biar permanen
+        localStorage.setItem('fouqra_v3_db', JSON.stringify(this.allSantris));
+    }
+},
+
+                startGame(santri) {
+                    this.selectedSantri = santri;
+                    this.nextQuestion();
+                    this.startTimer();
+                },
+
+                startTimer() {
+                    this.timer = 15;
+                    this.interval = setInterval(() => {
+                        if(this.timer > 0) {
+                            this.timer--;
+                        } else {
+                            this.checkAnswer(null); // Timeout dianggap salah
+                        }
+                    }, 1000);
+                },
+
+                nextQuestion() {
+                    this.currentQuestion = this.questions[Math.floor(Math.random() * this.questions.length)];
+                },
+
+                checkAnswer(answer) {
+                    clearInterval(this.interval);
+                    this.isCorrect = (answer === this.currentQuestion.correct);
+                    
+                    if(this.isCorrect) {
+                        confetti({
+                            particleCount: 150,
+                            spread: 70,
+                            origin: { y: 0.6 },
+                            colors: ['#F5A201', '#A8E8F9', '#ffffff']
+                        });
+                    }
+                    this.showResult = true;
+                },
+
+                finishGame() {
+                    if(this.isCorrect) {
+                        // UPDATE POIN KE DATABASE LOKAL
+                        let mainData = JSON.parse(localStorage.getItem('fouqra_v3_db'));
+                        const idx = mainData.findIndex(s => s.id === this.selectedSantri.id);
+                        
+                        if (idx !== -1) {
+                            mainData[idx].poin = (mainData[idx].poin || 0) + 5;
+                            localStorage.setItem('fouqra_v3_db', JSON.stringify(mainData));
+                        }
+                    }
+
+                    // Reset State & Kembali
+                    this.showResult = false;
+                    this.selectedSantri = null;
+                    window.location.href = 'game.html';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

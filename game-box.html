@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOUQRA - Kotak Misteri</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        .box-item { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .box-item:hover:not(.opened) { transform: scale(1.05); cursor: pointer; }
+        .shake { animation: shake 0.5s infinite; }
+        @keyframes shake {
+            0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); }
+            50% { transform: rotate(0eg); } 75% { transform: rotate(-5deg); }
+            100% { transform: rotate(0deg); }
+        }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-[#013C58]" x-data="mysteryBox()">
+
+    <nav class="p-6 flex justify-between items-center">
+        <a href="game.html" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white shadow-sm"><i class="fa-solid fa-arrow-left"></i></a>
+        <h1 class="font-black uppercase tracking-tighter text-sm">Mystery <span class="text-[#F5A201]">Box</span></h1>
+        <button @click="resetBoxes()" class="text-[#F5A201] text-xs font-black uppercase">Reset</button>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-6">
+        <div class="text-center mb-10">
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Pilih salah satu kotakmu!</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <template x-for="(box, index) in boxes" :key="index">
+                <div @click="openBox(index)" 
+                     :class="box.opened ? 'bg-gray-100' : 'bg-white shadow-xl shake'"
+                     class="box-item h-48 rounded-[2.5rem] flex items-center justify-center relative overflow-hidden border-2 border-dashed border-[#A8E8F9]">
+                    
+                    <template x-if="!box.opened">
+                        <i class="fa-solid fa-box text-5xl text-[#F5A201]"></i>
+                    </template>
+                    
+                    <template x-if="box.opened">
+                        <div class="text-center p-4">
+                            <i :class="box.icon" class="text-3xl mb-2 block"></i>
+                            <p class="text-[9px] font-black uppercase leading-tight" x-text="box.content"></p>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </main>
+
+    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#013C58]/90 backdrop-blur-md">
+        <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-[#F5A201]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i :class="result.icon" class="text-3xl text-[#F5A201]"></i>
+            </div>
+            <h2 class="text-2xl font-black uppercase tracking-tighter mb-2" x-text="result.type"></h2>
+            <p class="text-sm font-medium text-gray-500 mb-8" x-text="result.content"></p>
+            <button @click="showModal = false" class="w-full py-4 bg-[#013C58] text-[#EAC800] rounded-2xl font-black text-xs uppercase">Siap, Laksanakan!</button>
+        </div>
+    </div>
+
+    <script>
+        function mysteryBox() {
+            return {
+                showModal: false,
+                result: {},
+                boxes: Array(8).fill().map(() => ({ opened: false, content: '', icon: '' })),
+                contents: [
+                    { type: 'Tantangan', content: 'Baca Surat Al-Fil Tanpa Salah!', icon: 'fa-solid fa-scroll' },
+                    { type: 'Reward', content: 'Bebas Setoran Hari Ini! (Zonk)', icon: 'fa-solid fa-star' },
+                    { type: 'Tantangan', content: 'Lanjutkan Ayat: Watuubuu ilallaahi...', icon: 'fa-solid fa-microphone' },
+                    { type: 'Reward', content: 'Dapat 2 Stiker Bintang!', icon: 'fa-solid fa-award' },
+                    { type: 'Tantangan', content: 'Sebutkan Nama Surat Sebelum An-Naba!', icon: 'fa-solid fa-brain' },
+                    { type: 'Tantangan', content: 'Murajaah 3 Surat Pendek Terakhir', icon: 'fa-solid fa-repeat' },
+                    { type: 'Reward', content: 'Pilih Teman Untuk Duet Setoran', icon: 'fa-solid fa-users' },
+                    { type: 'Tantangan', content: 'Tebak Nama Surat dari Ayat Terakhirnya', icon: 'fa-solid fa-question' }
+                ],
+                init() { this.resetBoxes(); },
+                resetBoxes() {
+                    let shuffled = [...this.contents].sort(() => 0.5 - Math.random());
+                    this.boxes = shuffled.map(c => ({ opened: false, ...c }));
+                },
+                openBox(index) {
+                    if (this.boxes[index].opened) return;
+                    this.boxes[index].opened = true;
+                    this.result = this.boxes[index];
+                    this.showModal = true;
+                    if (this.result.type === 'Reward') {
+                        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOUQRA Admin - Management Santri</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        .santri-card { transition: all 0.4s ease; cursor: pointer; border: 1px solid #f1f5f9; }
+        .santri-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .gold-glow { border: 2px solid #F5A201 !important; box-shadow: 0 0 15px rgba(245, 162, 1, 0.2); }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-[#013C58] min-h-screen" x-data="fouqraManager()">
+
+    <nav class="bg-white border-b border-gray-100 sticky top-0 z-40 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <a href="dashboard.html" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50">
+                    <i class="fa-solid fa-chevron-left text-gray-400"></i>
+                </a>
+                <div>
+                    <h1 class="text-xl font-black uppercase tracking-tighter">Data <span class="text-[#F5A201]">Santri</span></h1>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Firestore Realtime Mode</p>
+                </div>
+            </div>
+            <button @click="openAdd()" class="bg-[#013C58] text-[#EAC800] px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all">
+                <i class="fa-solid fa-plus mr-2"></i> Tambah Santri
+            </button>
+        </div>
+    </nav>
+
+    <div x-show="loading" class="flex justify-center items-center py-20">
+        <i class="fa-solid fa-circle-notch animate-spin text-3xl text-[#013C58]"></i>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-6" x-show="!loading" x-cloak>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <template x-for="(santri, index) in santris" :key="santri.id">
+                <div @click="openEdit(santri)" 
+                     :class="index === 0 ? 'gold-glow bg-white' : 'bg-white'"
+                     class="santri-card p-6 rounded-[2.5rem] flex flex-col items-center text-center space-y-4">
+                    
+                    <div class="relative">
+    <img :src="`assets/${santri.nama.toLowerCase().replace(/\s+/g, '')}.jpeg`" 
+         @error="$el.src='https://ui-avatars.com/api/?name=' + santri.nama + '&background=013C58&color=fff'"
+         class="w-24 h-24 rounded-[2rem] object-cover border-4 border-gray-50 shadow-sm">
+    
+    <template x-if="index === 0">
+        <div class="absolute -top-2 -left-2 bg-[#F5A201] text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
+            <i class="fa-solid fa-crown text-[10px]"></i>
+        </div>
+    </template>
+</div>
+
+                    <div>
+                        <p class="font-black text-sm uppercase tracking-tight" x-text="santri.nama"></p>
+                        <div class="mt-2 space-y-1">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">Halaman <span x-text="santri.progresHalaman"></span></p>
+                            <span class="inline-block bg-[#254E06]/10 text-[#254E06] text-[9px] font-black px-3 py-1 rounded-full uppercase" x-text="santri.hafalan"></span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </main>
+
+    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#013C58]/80 backdrop-blur-sm">
+        <div @click.away="!uploading && (showModal = false)" class="bg-white w-full max-w-lg rounded-[3rem] p-8 shadow-2xl">
+            <div class="flex items-center gap-5 mb-8">
+                <div class="relative group">
+                    <img :src="previewFoto || editData.foto || 'https://ui-avatars.com/api/?name=User'" class="w-20 h-20 rounded-[1.5rem] object-cover bg-gray-100">
+                    <label class="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 bg-black/40 rounded-[1.5rem] transition">
+                        <i class="fa-solid fa-camera text-white"></i>
+                        <input type="file" @change="handleFile" class="hidden" accept="image/*">
+                    </label>
+                </div>
+                <h2 class="text-2xl font-black uppercase tracking-tighter" x-text="isEdit ? 'Edit Data' : 'Santri Baru'"></h2>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Nama Lengkap</label>
+                    <input type="text" x-model="editData.nama" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold focus:ring-2 focus:ring-[#F5A201]">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Progres Hal</label>
+                        <input type="number" x-model="editData.progresHalaman" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Absensi</label>
+                        <input type="number" x-model="editData.absensi" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Surat Hafalan</label>
+                    <input type="text" x-model="editData.hafalan" placeholder="Contoh: Al-Falaq" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button @click="saveData()" :disabled="uploading" class="flex-1 bg-[#013C58] text-[#EAC800] py-4 rounded-2xl font-black uppercase text-xs tracking-widest disabled:opacity-50">
+                    <span x-text="uploading ? 'Memproses...' : 'Simpan Data'"></span>
+                </button>
+
+                
+                <button @click="showModal = false" class="px-6 bg-gray-100 text-gray-400 rounded-2xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <template x-if="isEdit">
+                <button @click="deleteSantri(editData.id)" class="w-full mt-4 text-red-400 text-[10px] font-bold uppercase tracking-widest hover:text-red-600 transition">
+                    Hapus Data Santri
+                </button>
+            </template>
+        </div>
+    </div>
+
+    <footer class="bg-[#013C58] text-white mt-16 md:mt-24 px-6 md:px-10 py-12 md:py-16 rounded-t-[2.5rem] md:rounded-t-[3.5rem]">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
+        <div class="space-y-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[#EAC800] rounded-lg text-[#013C58] flex items-center justify-center font-bold italic">4</div>
+                <h4 class="font-black text-2xl tracking-tighter uppercase">Fouqra</h4>
+            </div>
+            <p class="text-sm opacity-50 leading-relaxed font-medium">Dashboard akademik santri untuk memantau perkembangan mengaji dan administrasi secara mandiri.</p>
+        </div>
+        
+        <div class="space-y-6">
+            <h4 class="font-black text-[10px] uppercase tracking-[0.3em] text-[#F5A201]">Navigasi Cepat</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm font-bold opacity-60">
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Materi</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Nilai</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Jadwal</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Profil</a>
+            </div>
+        </div>
+
+        <div class="space-y-6 md:text-right">
+            <h4 class="font-black text-[10px] uppercase tracking-[0.3em] text-[#F5A201]">Status Sistem</h4>
+            <div class="flex items-center md:justify-end gap-2 text-xs font-bold text-green-400">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                Sistem Berjalan Normal
+            </div>
+            <p class="text-[10px] font-black opacity-30 mt-8 uppercase">© 2026 Fouqra Digital Solution</p>
+        </div>
+    </div>
+</footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-storage-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-storage-compat.js"></script>
+
+<script>
+    // Inisialisasi Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCNAtkwtt21zdfFE8O25R6dKyOCsfn2XG4",
+        authDomain: "fouqra-a0fd6.firebaseapp.com",
+        projectId: "fouqra-a0fd6",
+        storageBucket: "fouqra-a0fd6.appspot.com",
+        messagingSenderId: "1012288939398",
+        appId: "1:1012288939398:web:b61553dba2a364e7557807"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // Fungsi Utama Alpine
+    function fouqraManager() {
+        return {
+            santris: [],
+            loading: true,
+            showModal: false,
+            isEdit: false,
+            uploading: false,
+            previewFoto: null,
+            selectedFile: null,
+            editData: { id: '', nama: '', progresHalaman: 0, absensi: 0, hafalan: '', foto: '' },
+
+            init() {
+                db.collection("santri").onSnapshot((snapshot) => {
+                    this.santris = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    this.santris.sort((a, b) => (b.progresHalaman || 0) - (a.progresHalaman || 0));
+                    this.loading = false;
+                }, (err) => {
+                    console.error("Firestore Error:", err);
+                    this.loading = false;
+                });
+            },
+
+            openAdd() {
+                this.isEdit = false;
+                this.previewFoto = null;
+                this.selectedFile = null;
+                this.editData = { id: '', nama: '', progresHalaman: 0, absensi: 0, hafalan: '', foto: '' };
+                this.showModal = true;
+            },
+
+            openEdit(santri) {
+                this.isEdit = true;
+                this.previewFoto = null;
+                this.selectedFile = null;
+                this.editData = { ...santri };
+                this.showModal = true;
+            },
+
+            handleFile(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    this.selectedFile = file;
+                    this.previewFoto = URL.createObjectURL(file);
+                }
+            },
+
+            async saveData() {
+    this.uploading = true; // Status tombol jadi "Memproses..."
+    try {
+        // Kita langsung buat data tanpa proses upload ke Storage
+        const payload = {
+            nama: this.editData.nama,
+            progresHalaman: parseInt(this.editData.progresHalaman) || 0,
+            absensi: parseInt(this.editData.absensi) || 0,
+            hafalan: this.editData.hafalan || "",
+            foto: "" // Kosongkan saja dulu
+        };
+
+        if (this.isEdit) {
+            // Update data santri yang sudah ada (seperti Kahfi atau Shafa)
+            await db.collection("santri").doc(this.editData.id).update(payload);
+        } else {
+            // Tambah santri baru ke koleksi
+            await db.collection("santri").add({
+                ...payload,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        this.showModal = false;
+        console.log("Data berhasil disimpan tanpa foto!");
+    } catch (error) {
+        console.error("Waduh, error simpan:", error);
+        alert("Gagal simpan: " + error.message);
+    } finally {
+        this.uploading = false;
+    }
+},
+    async deleteSantri(id) {
+                if (confirm("Yakin ingin menghapus data santri ini?")) {
+                    try {
+                        await db.collection("santri").doc(id).delete();
+                        console.log("Data santri berhasil dihapus!");
+                    } catch (error) {
+                        console.error("Error hapus data:", error);
+                        alert("Gagal hapus: " + error.message);
+                    }
+                }
+            }
+        }   
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOUQRA - Presensi Santri</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        .status-btn { transition: all 0.2s ease; }
+        .active-h { background-color: #254E06; color: white; border-color: #254E06; }
+        .active-i { background-color: #F5A201; color: white; border-color: #F5A201; }
+        .active-s { background-color: #A8E8F9; color: #013C58; border-color: #A8E8F9; }
+        .active-a { background-color: #ef4444; color: white; border-color: #ef4444; }
+    </style>
+</head>
+<body class="bg-gray-50 text-[#013C58]" x-data="presensiApp()">
+
+    <nav class="bg-white border-b border-gray-100 sticky top-0 z-40 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <a href="dashboard.html" class="text-gray-400 hover:text-[#013C58] transition-colors"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+                <div>
+                    <h1 class="text-xl font-black tracking-tighter uppercase leading-none">Presensi <span class="text-[#F5A201]">Harian</span></h1>
+                    <div class="relative mt-1">
+                        <input type="date" 
+                               x-model="selectedDate" 
+                               @change="loadPresensiData()"
+                               class="text-[10px] font-bold text-[#013C58] uppercase tracking-widest bg-gray-100 border-none rounded-md px-2 py-1 focus:ring-2 focus:ring-[#F5A201] outline-none">
+                    </div>
+                </div>
+            </div>
+            <div class="bg-[#013C58] text-white px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                <span x-text="countPresent()"></span> / <span x-text="santris.length"></span> Hadir
+            </div>
+        </div>
+    </nav>
+
+    <div x-show="loading" class="flex justify-center items-center py-20">
+        <i class="fa-solid fa-circle-notch animate-spin text-3xl text-[#013C58]"></i>
+    </div>
+
+    <main class="max-w-4xl mx-auto p-6" x-show="!loading" x-cloak>
+        <div class="space-y-4">
+            <template x-for="(santri, index) in santris" :key="santri.id">
+                <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <img :src="`assets/${santri.nama.toLowerCase().replace(/\s+/g, '')}.jpeg`" 
+                             @error="$el.src='https://ui-avatars.com/api/?name=' + santri.nama + '&background=013C58&color=fff'"
+                             class="w-14 h-14 rounded-2xl object-cover">
+                        <div>
+                            <p class="font-black text-sm uppercase tracking-tight" x-text="santri.nama"></p>
+                            <p class="text-[9px] font-bold text-gray-400 uppercase" x-text="santri.hafalan || 'Belum ada hafalan'"></p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-1 md:gap-2">
+                        <button @click="setStatus(index, 'H')" :class="santri.status === 'H' ? 'active-h' : 'bg-gray-50 text-gray-400'" 
+                                class="status-btn w-10 h-10 md:w-12 md:h-12 rounded-xl border border-gray-100 flex items-center justify-center font-black text-xs">H</button>
+                        <button @click="setStatus(index, 'I')" :class="santri.status === 'I' ? 'active-i' : 'bg-gray-50 text-gray-400'" 
+                                class="status-btn w-10 h-10 md:w-12 md:h-12 rounded-xl border border-gray-100 flex items-center justify-center font-black text-xs">I</button>
+                        <button @click="setStatus(index, 'S')" :class="santri.status === 'S' ? 'active-s' : 'bg-gray-50 text-gray-400'" 
+                                class="status-btn w-10 h-10 md:w-12 md:h-12 rounded-xl border border-gray-100 flex items-center justify-center font-black text-xs">S</button>
+                        <button @click="setStatus(index, 'A')" :class="santri.status === 'A' ? 'active-a' : 'bg-gray-50 text-gray-400'" 
+                                class="status-btn w-10 h-10 md:w-12 md:h-12 rounded-xl border border-gray-100 flex items-center justify-center font-black text-xs">A</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div class="mt-10 pb-10">
+            <button @click="savePresensi()" :disabled="saving" class="w-full bg-[#013C58] text-[#EAC800] py-5 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+                <span x-text="saving ? 'Menyimpan...' : 'Simpan Presensi Hari Ini'"></span> <i class="fa-solid fa-cloud-arrow-up ml-2"></i>
+            </button>
+            <p class="text-center text-[9px] font-bold text-gray-300 uppercase mt-4 tracking-widest italic">Data disimpan langsung ke Cloud Firestore</p>
+        </div>
+    </main>
+
+    <div x-show="showToast" x-cloak x-transition class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
+        <div class="bg-[#254E06] text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+            <i class="fa-solid fa-circle-check"></i>
+            <span class="text-[10px] font-black uppercase tracking-widest">Absensi Berhasil Disimpan!</span>
+        </div>
+    </div>
+    <footer class="bg-[#013C58] text-white mt-16 md:mt-24 px-6 md:px-10 py-12 md:py-16 rounded-t-[2.5rem] md:rounded-t-[3.5rem]">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
+        <div class="space-y-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[#EAC800] rounded-lg text-[#013C58] flex items-center justify-center font-bold italic">4</div>
+                <h4 class="font-black text-2xl tracking-tighter uppercase">Fouqra</h4>
+            </div>
+            <p class="text-sm opacity-50 leading-relaxed font-medium">Dashboard akademik santri untuk memantau perkembangan mengaji dan administrasi secara mandiri.</p>
+        </div>
+        
+        <div class="space-y-6">
+            <h4 class="font-black text-[10px] uppercase tracking-[0.3em] text-[#F5A201]">Navigasi Cepat</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm font-bold opacity-60">
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Materi</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Nilai</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Jadwal</a>
+                <a href="#" class="hover:text-[#F5A201] transition-colors">Profil</a>
+            </div>
+        </div>
+
+        <div class="space-y-6 md:text-right">
+            <h4 class="font-black text-[10px] uppercase tracking-[0.3em] text-[#F5A201]">Status Sistem</h4>
+            <div class="flex items-center md:justify-end gap-2 text-xs font-bold text-green-400">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                Sistem Berjalan Normal
+            </div>
+            <p class="text-[10px] font-black opacity-30 mt-8 uppercase">© 2026 Fouqra Digital Solution</p>
+        </div>
+    </div>
+</footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Konfigurasi Firebase (Tiru dari Management)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNAtkwtt21zdfFE8O25R6dKyOCsfn2XG4",
+            authDomain: "fouqra-a0fd6.firebaseapp.com",
+            projectId: "fouqra-a0fd6",
+            storageBucket: "fouqra-a0fd6.appspot.com",
+            messagingSenderId: "1012288939398",
+            appId: "1:1012288939398:web:b61553dba2a364e7557807"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        function presensiApp() {
+            return {
+                selectedDate: new Date().toISOString().split('T')[0],
+                showToast: false,
+                loading: true,
+                saving: false,
+                santris: [],
+
+                init() {
+                    this.loadPresensiData();
+                },
+
+                // Ambil data Realtime dari Firestore
+                loadPresensiData() {
+                    this.loading = true;
+                    
+                    // Listen ke koleksi santri
+                    db.collection("santri").onSnapshot((snapshot) => {
+                        const masterSantri = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            nama: doc.data().nama,
+                            hafalan: doc.data().hafalan,
+                            rank: doc.data().rank
+                        }));
+
+                        // Ambil log absensi harian untuk tanggal yang dipilih
+                        db.collection("absensi_log").doc(this.selectedDate).get().then((doc) => {
+                            if (doc.exists) {
+                                // Jika sudah ada riwayat absen di tanggal ini
+                                this.santris = doc.data().data;
+                            } else {
+                                // Jika belum ada, tampilkan master dengan status default H
+                                this.santris = masterSantri.map(s => ({
+                                    ...s,
+                                    status: 'H'
+                                }));
+                            }
+                            this.loading = false;
+                        }).catch(err => {
+                            console.error("Error load log:", err);
+                            this.loading = false;
+                        });
+                    });
+                },
+
+                setStatus(index, status) {
+                    this.santris[index].status = status;
+                },
+
+                countPresent() {
+                    return this.santris.filter(s => s.status === 'H').length;
+                },
+
+                async savePresensi() {
+                    this.saving = true;
+                    try {
+                        // 1. Simpan/Update riwayat ke koleksi absensi_log
+                        await db.collection("absensi_log").doc(this.selectedDate).set({
+                            tanggal: this.selectedDate,
+                            data: this.santris,
+                            totalHadir: this.countPresent(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        // 2. Update counter absensi di dokumen masing-masing santri (hanya jika Hadir)
+                        // Gunakan batch agar lebih efisien
+                        const batch = db.batch();
+                        this.santris.forEach(s => {
+                            if (s.status === 'H') {
+                                const ref = db.collection("santri").doc(s.id);
+                                batch.update(ref, {
+                                    absensi: firebase.firestore.FieldValue.increment(1)
+                                });
+                            }
+                        });
+                        await batch.commit();
+
+                        this.showToast = true;
+                        setTimeout(() => { this.showToast = false; }, 3000);
+                    } catch (error) {
+                        console.error("Gagal simpan:", error);
+                        alert("Gagal menyimpan ke Cloud: " + error.message);
+                    } finally {
+                        this.saving = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

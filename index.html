@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOUQRA - Portal Ngaji Modern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-auth-compat.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        .bento-card { transition: all 0.3s ease; border: 1px solid rgba(168, 232, 249, 0.3); background: white; }
+        .bento-card:hover { transform: translateY(-5px); box-shadow: 0 12px 20px -5px rgba(1, 60, 88, 0.1); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #013C58; border-radius: 10px; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body x-data="fouqraPortal()" x-init="init()">
+
+    <nav class="bg-white border-b border-gray-100 sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-[#00537A] rounded-xl flex items-center justify-center text-[#EAC800] shadow-lg italic font-bold text-xl">4</div>
+                <h1 class="text-xl font-black tracking-tighter uppercase">Fouq<span class="text-[#F5A201]">ra</span></h1>
+            </div>
+
+            <div class="hidden md:flex items-center gap-8 font-bold text-[11px] uppercase tracking-[0.2em] text-gray-400">
+                <a href="#beranda" class="text-[#013C58] hover:text-[#013C58] transition-colors">Beranda</a>
+                <a href="#materi" class="hover:text-[#013C58] transition-colors">Materi</a>
+                <a href="#santri" class="hover:text-[#013C58] transition-colors">Santri</a>
+                <a href="#game" class="hover:text-[#013C58] transition-colors">Game</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button @click="loginModal = true" class="bg-[#013C58] text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#00537A] transition-all shadow-md">
+                    Masuk <i class="fa-solid fa-right-to-bracket ml-2"></i>
+                </button>
+                <button @click="mobileMenu = !mobileMenu" class="md:hidden text-[#013C58] text-xl">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="mobileMenu" x-transition x-cloak class="md:hidden bg-white border-t mt-4 py-4 space-y-4 font-bold text-[10px] uppercase tracking-widest text-gray-400">
+            <a href="#beranda" @click="mobileMenu = false" class="block hover:text-[#013C58]">Beranda</a>
+            <a href="#materi" @click="mobileMenu = false" class="block hover:text-[#013C58]">Materi</a>
+            <a href="#santri" @click="mobileMenu = false" class="block hover:text-[#013C58]">Santri</a>
+            <a href="#game" @click="mobileMenu = false" class="block hover:text-[#013C58]">Game</a>
+        </div>
+    </nav>
+
+    <div x-show="loginModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#013C58]/80 backdrop-blur-md" x-cloak x-transition>
+        <div @click.away="loginModal = false" class="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative overflow-hidden">
+            <button @click="loginModal = false" class="absolute top-6 right-6 text-gray-300 hover:text-[#013C58]">
+                <i class="fa-solid fa-circle-xmark text-2xl"></i>
+            </button>
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-black uppercase tracking-tighter">Portal <span class="text-[#F5A201]">Masuk</span></h2>
+            </div>
+            <form @submit.prevent="handleLogin" class="space-y-4">
+                <input type="email" x-model="email" required class="w-full bg-gray-50 border rounded-2xl py-4 px-6 text-xs font-bold focus:outline-none focus:border-[#F5A201]" placeholder="Email">
+                <input type="password" x-model="password" required class="w-full bg-gray-50 border rounded-2xl py-4 px-6 text-xs font-bold focus:outline-none focus:border-[#F5A201]" placeholder="Password">
+                <button type="submit" :disabled="isLoggingIn" class="w-full bg-[#013C58] text-[#EAC800] py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl">
+                    <span x-text="isLoggingIn ? 'Memproses...' : 'Masuk Sekarang'"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-24">
+        
+        <section id="beranda" class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
+            <div class="md:col-span-2 relative overflow-hidden bg-[#013C58] rounded-[2.5rem] p-10 text-white min-h-[320px] flex items-center">
+                <div class="relative z-10 space-y-5 max-w-lg">
+                    <span class="bg-[#254E06] px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em]">Level: Iqra 4</span>
+                    <h2 class="text-4xl font-black leading-tight">Mari Menjadi Generasi Pecinta Al-Qur'an</h2>
+                    <p class="text-sm opacity-70 leading-relaxed">Platform khusus kelompok belajar Iqra 4. Pantau progres mengaji dan hafalanmu di sini secara transparan.</p>
+                    <button @click="loginModal = true" class="bg-[#F5A201] text-[#013C58] px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-lg">Masuk Dashboard</button>
+                </div>
+                <div class="absolute right-0 top-0 w-1/2 h-full opacity-10 grayscale">
+                    <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800" class="object-cover h-full">
+                </div>
+            </div>
+            <div class="bg-[#A8E8F9] rounded-[2.5rem] p-8 flex flex-col justify-between shadow-inner">
+                <div>
+                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#00537A] shadow-sm mb-6">
+                        <i class="fa-solid fa-heart text-xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-black uppercase tracking-tighter">Kelompok Belajar</h3>
+                    <p class="text-xs font-bold opacity-60 mt-2 uppercase tracking-wide">Dibimbing oleh: Kak Nikmah</p>
+                </div>
+                <div class="mt-6 p-5 bg-white/40 rounded-[2rem] border border-white/50">
+                    <p class="text-[10px] font-black uppercase text-[#013C58] mb-1">Santri Aktif</p>
+                    <div class="flex items-end gap-2">
+                        <span class="text-4xl font-black" x-text="santris.length.toString().padStart(2, '0')">00</span>
+                        <span class="text-xs font-bold opacity-50 pb-1">Anak Hebat</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="materi" class="space-y-8">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h3 class="text-2xl font-black uppercase tracking-tighter">Silabus Materi</h3>
+                    <p class="text-sm opacity-50 font-bold uppercase tracking-widest mt-1">Apa yang kita pelajari?</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bento-card p-8 rounded-[2.5rem] space-y-4">
+                    <div class="w-12 h-12 bg-[#A8E8F9]/30 rounded-xl flex items-center justify-center text-[#013C58]"><i class="fa-solid fa-ruler-horizontal"></i></div>
+                    <h4 class="font-black uppercase tracking-tighter">Mad (Panjang Pendek)</h4>
+                    <p class="text-xs opacity-60">Membedakan bacaan 1 harakat dan 2 harakat dengan bantuan Alif, Wawu, Ya.</p>
+                </div>
+                <div class="bento-card p-8 rounded-[2.5rem] space-y-4">
+                    <div class="w-12 h-12 bg-[#F5A201]/10 rounded-xl flex items-center justify-center text-[#F5A201]"><i class="fa-solid fa-language"></i></div>
+                    <h4 class="font-black uppercase tracking-tighter">Huruf Hijaiyah</h4>
+                    <p class="text-xs opacity-60">Pendalaman bentuk huruf saat disambung di awal, tengah, dan akhir kata.</p>
+                </div>
+                <div class="bento-card p-8 rounded-[2.5rem] space-y-4">
+                    <div class="w-12 h-12 bg-[#254E06]/10 rounded-xl flex items-center justify-center text-[#254E06]"><i class="fa-solid fa-microphone"></i></div>
+                    <h4 class="font-black uppercase tracking-tighter">Makhraj Dasar</h4>
+                    <p class="text-xs opacity-60">Latihan mengeluarkan suara dari tenggorokan dan lisan secara tepat.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="santri" class="space-y-8">
+            <h3 class="text-2xl font-black uppercase tracking-tighter">Progres Santri</h3>
+            <div class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="p-6 text-[10px] font-black uppercase text-gray-400">Santri</th>
+                                <th class="p-6 text-[10px] font-black uppercase text-gray-400">Peringkat</th>
+                                <th class="p-6 text-[10px] font-black uppercase text-gray-400">Progres</th>
+                                <th class="p-6 text-[10px] font-black uppercase text-gray-400">Hafalan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm font-bold">
+                            <template x-for="(santri, index) in santris" :key="santri.id">
+                                <tr class="border-t border-gray-50 hover:bg-gray-50">
+                                    <td class="p-6 flex items-center gap-4">
+                                        <img :src="`assets/${santri.nama.toLowerCase().replace(/\s+/g, '')}.jpeg`" 
+                                             @error="$el.src='https://ui-avatars.com/api/?name=' + santri.nama + '&background=A8E8F9&color=013C58'"
+                                             class="w-10 h-10 rounded-xl object-cover border-2 border-[#A8E8F9]">
+                                        <span x-text="santri.nama"></span>
+                                    </td>
+                                    <td class="p-6">
+                                        <span :class="index < 3 ? 'bg-[#EAC800] text-[#013C58]' : 'bg-gray-100 text-gray-400'" 
+                                              class="px-3 py-1 rounded-full text-[10px]" x-text="'Rank ' + (index + 1)"></span>
+                                    </td>
+                                    <td class="p-6 text-gray-400" x-text="'Iqra 4 • Hal ' + (santri.progresHalaman || 0)"></td>
+                                    <td class="p-6" x-text="santri.hafalan || '-'"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <div x-show="loading" class="p-10 text-center font-bold text-gray-300 uppercase tracking-widest text-xs">
+                    Memuat Data Santri...
+                </div>
+            </div>
+        </section>
+
+        <section id="game" class="bg-[#F5A201] rounded-[2.5rem] p-10 text-[#013C58] flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="space-y-4">
+                <h3 class="text-3xl font-black uppercase tracking-tighter leading-none text-center md:text-left">Waktunya Bermain!</h3>
+                <p class="font-bold opacity-70 text-center md:text-left">Belajar hijaiyah jadi lebih seru dengan mini games interaktif.</p>
+            </div>
+            <div class="flex gap-4">
+                <button @click="loginModal = true" class="bg-white/20 p-4 rounded-2xl backdrop-blur-sm border border-white/30 text-center w-24 hover:bg-white transition-all">
+                    <i class="fa-solid fa-puzzle-piece text-2xl mb-2"></i>
+                    <p class="text-[9px] font-black uppercase">Puzzle</p>
+                </button>
+                <button @click="loginModal = true" class="bg-white/20 p-4 rounded-2xl backdrop-blur-sm border border-white/30 text-center w-24 hover:bg-white transition-all">
+                    <i class="fa-solid fa-bolt text-2xl mb-2"></i>
+                    <p class="text-[9px] font-black uppercase">Kuis</p>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#013C58] text-white mt-24 px-10 py-16 rounded-t-[3.5rem]">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-[#EAC800] rounded-lg flex items-center justify-center text-[#013C58] font-bold italic">4</div>
+                <span class="font-black uppercase tracking-tighter">Fouqra</span>
+            </div>
+            <p class="text-[10px] font-black opacity-30 uppercase tracking-[0.3em]">© 2026 Fouqra Digital Solution | Kak Nikmah Group</p>
+        </div>
+    </footer>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNAtkwtt21zdfFE8O25R6dKyOCsfn2XG4",
+            authDomain: "fouqra-a0fd6.firebaseapp.com",
+            projectId: "fouqra-a0fd6",
+            storageBucket: "fouqra-a0fd6.appspot.com",
+            messagingSenderId: "1012288939398",
+            appId: "1:1012288939398:web:b61553dba2a364e7557807"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        function fouqraPortal() {
+            return {
+                loginModal: false, 
+                mobileMenu: false, // Tambah state mobile menu
+                isLoggingIn: false, 
+                loading: true,
+                email: '', 
+                password: '', 
+                santris: [],
+
+                init() {
+                    db.collection("santri").onSnapshot((snapshot) => {
+                        this.santris = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        this.santris.sort((a, b) => (b.progresHalaman || 0) - (a.progresHalaman || 0));
+                        this.loading = false;
+                    }, (error) => {
+                        console.error("Firestore Error:", error);
+                        this.loading = false;
+                    });
+                },
+
+                async handleLogin() {
+                    this.isLoggingIn = true;
+                    try {
+                        const userCredential = await auth.signInWithEmailAndPassword(this.email, this.password);
+                        const userDoc = await db.collection("users").doc(userCredential.user.uid).get();
+                        let nama = userDoc.exists ? userDoc.data().nama : "Admin";
+                        alert(`Selamat Datang, ${nama}!`);
+                        window.location.href = 'dashboard.html';
+                    } catch (error) {
+                        alert("Gagal Masuk: " + error.message);
+                    } finally {
+                        this.isLoggingIn = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
