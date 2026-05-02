@@ -24,20 +24,23 @@
             <i class="fa-solid fa-chevron-left"></i>
         </a>
         <div class="text-center">
-            <h1 class="text-[10px] font-black uppercase tracking-[0.3em]">Peta <span class="text-[#F5A201]">Bintang</span></h1>
+            <h1 class="text-[10px] font-black uppercase tracking-[0.3em]">Peta <span class="text-[#F5A201]">Pokemon</span></h1>
         </div>
         <button @click="resetGame()" class="text-red-400 text-[10px] font-black uppercase tracking-widest">Reset</button>
     </nav>
 
     <main class="max-w-2xl mx-auto p-6 pb-40">
-        
+        <div class="mb-4 bg-[#013C58] text-white rounded-3xl p-4">
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-[#EAC800]">Mode Ular Tangga Pokemon</p>
+            <p class="text-xs mt-2">Lempar dadu, jawab pertanyaan materi Iqra, lalu naik tangga (Pikachu) atau turun ular (Ekans).</p>
+        </div>
+
         <div class="grid-board bg-white p-6 rounded-[3rem] shadow-2xl border border-gray-100 mb-10">
             <template x-for="n in 20" :key="n">
                 <div :class="n === 20 ? 'finish-cell shadow-lg shadow-[#F5A201]/30' : 'bg-gray-50 border border-gray-100'"
                      class="cell rounded-[1.8rem] flex flex-col items-center justify-center relative shadow-inner overflow-hidden">
-                    
                     <span class="absolute top-2 left-3 text-[10px] font-black opacity-20" x-text="n"></span>
-                    
+                    <span class="text-[9px]" x-text="iconAt(n)"></span>
                     <div class="flex flex-wrap justify-center gap-1 p-2">
                         <template x-for="s in santris" :key="s.id">
                             <template x-if="s.pos === n">
@@ -48,7 +51,6 @@
                             </template>
                         </template>
                     </div>
-
                     <template x-if="n === 20">
                         <i class="fa-solid fa-crown text-xl mt-1 animate-bounce"></i>
                     </template>
@@ -79,11 +81,8 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <button @click="move(index, -1)" class="w-9 h-9 bg-gray-50 rounded-xl text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all flex items-center justify-center">
-                                <i class="fa-solid fa-minus text-[10px]"></i>
-                            </button>
-                            <button @click="move(index, 1)" class="px-5 py-3 bg-[#013C58] text-[#EAC800] rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-md">
-                                Maju <i class="fa-solid fa-chevron-right ml-1"></i>
+                            <button @click="playTurn(index)" class="px-5 py-3 bg-[#013C58] text-[#EAC800] rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-md">
+                                Dadu <span x-text="lastRoll[index] || '-'" class="ml-1"></span>
                             </button>
                         </div>
                     </div>
@@ -91,6 +90,18 @@
             </div>
         </div>
     </main>
+
+    <div x-show="showQuiz" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full">
+            <h3 class="font-black text-lg">Pertanyaan Materi</h3>
+            <p class="text-sm mt-2" x-text="activeQuestion?.q"></p>
+            <div class="mt-4 space-y-2">
+                <template x-for="(opt, idx) in activeQuestion?.options || []" :key="idx">
+                    <button @click="submitAnswer(idx)" class="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-[#A8E8F9]/30" x-text="opt"></button>
+                </template>
+            </div>
+        </div>
+    </div>
 
     <div x-show="showWin" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#013C58]/95 backdrop-blur-xl">
         <div class="text-center transform scale-up">
@@ -102,83 +113,89 @@
             </div>
             <h2 class="text-white text-5xl font-black uppercase tracking-tighter mb-2">MUBARAK!</h2>
             <p class="text-[#A8E8F9] text-lg font-bold uppercase tracking-[0.2em]" x-text="winner?.nama"></p>
-            <div class="mt-8 bg-white/10 px-8 py-4 rounded-[2rem] inline-block border border-white/10">
-                <span class="text-[#F5A201] font-black text-xl tracking-tighter">+10 BINTANG KEMENANGAN</span>
-            </div>
-            <button @click="showWin = false" class="block w-full mt-12 py-5 bg-white text-[#013C58] rounded-[2.5rem] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-gray-100 transition-all">Lanjut Belajar</button>
+            <button @click="showWin = false" class="block w-full mt-8 py-4 bg-white text-[#013C58] rounded-[2.5rem] font-black uppercase">Lanjut</button>
         </div>
     </div>
 
     <script>
         function mapGame() {
             return {
-                santris: [],
-                showWin: false,
-                winner: null,
+                santris: [], showWin: false, winner: null,
+                ladders: { 3: 8, 6: 14, 11: 17 },
+                snakes: { 9: 4, 15: 10, 19: 12 },
+                questions: [
+                    { q: 'Mad Thabi\'i dibaca berapa harakat?', options: ['2 harakat', '4 harakat', '6 harakat'], answer: 0 },
+                    { q: 'Huruf qolqolah pada singkatan BAJU DI TO QO adalah?', options: ['Ba Jim Dal Tho Qof', 'Ba Ta Jim Sin Qof', 'Ba Kaf Dal Tho Qof'], answer: 0 },
+                    { q: 'Pasangan yang benar untuk Mad Ya adalah?', options: ['Kasrah + Ya sukun', 'Fathah + Alif', 'Dhammah + Wawu sukun'], answer: 0 },
+                    { q: 'Huruf setelah Nun dalam urutan hijaiyah adalah?', options: ['Waw', 'Mim', 'Ya'], answer: 0 },
+                    { q: 'Makhraj Hamzah dan Ain ada di?', options: ['Tenggorokan', 'Bibir', 'Hidung'], answer: 0 }
+                ],
+                showQuiz: false, activeQuestion: null, activePlayerIndex: null,
+                pendingMove: 0, lastRoll: {},
 
                 init() {
-                    // Ambil data utama dari DB kamu
                     const localData = localStorage.getItem('fouqra_v3_db');
-                    // Ambil posisi terakhir pion agar tidak reset saat refresh
                     const savedPos = localStorage.getItem('fouqra_map_pos');
-                    
                     let baseData = localData ? JSON.parse(localData) : [];
                     const positions = savedPos ? JSON.parse(savedPos) : {};
-
-                    this.santris = baseData.map(s => ({
-                        ...s,
-                        pos: positions[s.id] || 1, // Default di kotak 1
-                        poin: s.poin || 0
-                    }));
+                    this.santris = baseData.map(s => ({ ...s, pos: positions[s.id] || 1, poin: s.poin || 0 }));
                 },
-
+                iconAt(n) {
+                    if (this.ladders[n]) return '⚡';
+                    if (this.snakes[n]) return '🐍';
+                    return '⚪';
+                },
+                playTurn(index) {
+                    const roll = Math.floor(Math.random() * 6) + 1;
+                    this.lastRoll[index] = roll;
+                    this.pendingMove = roll;
+                    this.activePlayerIndex = index;
+                    this.activeQuestion = this.questions[Math.floor(Math.random() * this.questions.length)];
+                    this.showQuiz = true;
+                },
+                submitAnswer(selected) {
+                    const benar = selected === this.activeQuestion.answer;
+                    const idx = this.activePlayerIndex;
+                    this.showQuiz = false;
+                    if (!benar) {
+                        this.updatePoin(idx, -1);
+                        alert('Jawaban belum tepat. Giliran selesai dan poin -1.');
+                        return;
+                    }
+                    this.move(idx, this.pendingMove);
+                    this.updatePoin(idx, 2);
+                },
                 move(index, steps) {
                     let s = this.santris[index];
-                    let newPos = s.pos + steps;
+                    let newPos = Math.min(20, s.pos + steps);
+                    s.pos = newPos;
 
-                    if (newPos >= 1 && newPos <= 20) {
-                        s.pos = newPos;
-                        this.saveData();
+                    if (this.ladders[newPos]) {
+                        s.pos = this.ladders[newPos];
+                        alert('Pikachu bantu naik tangga! ⚡');
+                    } else if (this.snakes[newPos]) {
+                        s.pos = this.snakes[newPos];
+                        alert('Ekans menggigit, turun ular! 🐍');
                     }
 
-                    // Logika jika sampai finish (kotak 20)
-                    if (newPos === 20) {
+                    this.saveData();
+                    if (s.pos === 20) {
                         this.winner = s;
                         this.showWin = true;
-                        this.updatePoin(index, 10); // Hadiah finish +10
+                        this.updatePoin(index, 10);
                         this.celebrate();
                     }
                 },
-
-                updatePoin(index, amount) {
-                    this.santris[index].poin += amount;
-                    this.saveData();
-                },
-
+                updatePoin(index, amount) { this.santris[index].poin = Math.max(0, this.santris[index].poin + amount); this.saveData(); },
                 saveData() {
-                    // 1. Simpan posisi pion
                     const posData = {};
                     this.santris.forEach(s => posData[s.id] = s.pos);
                     localStorage.setItem('fouqra_map_pos', JSON.stringify(posData));
-
-                    // 2. Simpan poin ke database utama agar dashboard terupdate
-                    const mainData = JSON.parse(localStorage.getItem('fouqra_v3_db'));
-                    this.santris.forEach(s => {
-                        const target = mainData.find(m => m.id === s.id);
-                        if(target) target.poin = s.poin;
-                    });
+                    const mainData = JSON.parse(localStorage.getItem('fouqra_v3_db') || '[]');
+                    this.santris.forEach(s => { const target = mainData.find(m => m.id === s.id); if(target) target.poin = s.poin; });
                     localStorage.setItem('fouqra_v3_db', JSON.stringify(mainData));
                 },
-
-                celebrate() {
-                    confetti({
-                        particleCount: 200,
-                        spread: 80,
-                        origin: { y: 0.6 },
-                        colors: ['#F5A201', '#013C58', '#ffffff']
-                    });
-                },
-
+                celebrate() { confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 }, colors: ['#F5A201', '#013C58', '#ffffff'] }); },
                 resetGame() {
                     if(confirm('Ulangi langkah semua santri ke kotak 1? (Poin bintang tetap aman)')) {
                         this.santris.forEach(s => s.pos = 1);
